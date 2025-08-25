@@ -4,12 +4,25 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>QPWonQuarterTracker</title>
+  <meta name="description" content="QPWonQuarterTracker (QPQ): tracker trimestrale per trattative e obiettivi. Pipeline, funnel, KPI e report offline.">
+  <meta name="theme-color" content="#0ea5e9" />
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0ea5e9" />
+
+  <!-- Icons / Favicons -->
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
   <link rel="apple-touch-icon" href="icons/icon-512.png">
+
+  <!-- Social (opzionale, se hai la card) -->
+  <meta property="og:title" content="QPWonQuarterTracker">
+  <meta property="og:description" content="Pipeline & report trimestrali • offline-first">
+  <meta property="og:image" content="social-card.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
 
   <!-- Fonts & Styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,16 +30,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Se usi la struttura /assets/css/ mantieni questa riga -->
   <link rel="stylesheet" href="assets/css/styles.css" />
-  <!-- In alternativa puoi usare un file singolo:
+  <!-- In alternativa puoi usare un file unico:
   <link rel="stylesheet" href="style.css" />
   -->
 </head>
 <body>
+  <noscript>Per usare QPWonQuarterTracker abilita JavaScript.</noscript>
+
   <header class="app-header">
     <div class="brand">
       <span class="logo">QPQ</span>
       <h1>QPWonQuarterTracker</h1>
-      <span class="suffix">· pipeline & report trimestrali</span>
+      <span class="suffix">· pipeline &amp; report trimestrali</span>
     </div>
 
     <nav class="app-nav" aria-label="Navigazione principale">
@@ -137,7 +152,7 @@
     <!-- IMPOSTAZIONI -->
     <section id="view-settings" class="view">
       <div class="card">
-        <div class="card-header"><h3>Target & date trimestre</h3></div>
+        <div class="card-header"><h3>Target &amp; date trimestre</h3></div>
         <div class="card-body settings-grid">
           <label>Anno
             <input type="number" id="setYear" min="2000" max="2100">
@@ -174,7 +189,7 @@
       </div>
 
       <div class="card">
-        <div class="card-header"><h3>Stage & probabilità</h3></div>
+        <div class="card-header"><h3>Stage &amp; probabilità</h3></div>
         <div class="card-body">
           <div id="stagesConfig"></div>
           <div class="row-actions">
@@ -184,13 +199,13 @@
           </div>
           <small class="muted">Gli stage <b>vinto</b> e <b>perso</b> sono obbligatori e non eliminabili.</small>
           <div class="row-actions">
-            <button id="saveStagesBtn">Salva stage & probabilità</button>
+            <button id="saveStagesBtn">Salva stage &amp; probabilità</button>
           </div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-header"><h3>Aspetto & dati</h3></div>
+        <div class="card-header"><h3>Aspetto &amp; dati</h3></div>
         <div class="card-body settings-grid">
           <label>Tema
             <select id="setTheme">
@@ -267,4 +282,5 @@
   <script type="module" src="assets/js/app.js"></script>
 </body>
 </html>
+
 
