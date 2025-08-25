@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quarter Tracker</title>
+  <title>QPWonQuarterTracker</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
@@ -15,13 +15,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Se usi la struttura /assets/css/ mantieni questa riga -->
   <link rel="stylesheet" href="assets/css/styles.css" />
+  <!-- In alternativa puoi usare un file singolo:
+  <link rel="stylesheet" href="style.css" />
+  -->
 </head>
 <body>
   <header class="app-header">
     <div class="brand">
-      <span class="logo">QT</span>
-      <h1>Quarter Tracker</h1>
+      <span class="logo">QPQ</span>
+      <h1>QPWonQuarterTracker</h1>
+      <span class="suffix">· pipeline & report trimestrali</span>
     </div>
 
     <nav class="app-nav" aria-label="Navigazione principale">
@@ -101,7 +106,7 @@
           <div class="actions">
             <button id="exportPdfBtn">Esporta PDF</button>
             <button id="exportJsonBtn">Backup JSON</button>
-            <label class="import-label" style="display:inline-flex;gap:.5rem;align-items:center;cursor:pointer;">
+            <label class="import-label">
               Importa JSON
               <input type="file" id="importJsonInput" accept="application/json" hidden>
             </label>
@@ -246,7 +251,7 @@
   </div>
 
   <footer class="app-footer">
-    <span>Quarter Tracker • Offline-first</span>
+    <span>QPWonQuarterTracker • Offline-first</span>
   </footer>
 
   <!-- Vendors -->
@@ -262,3 +267,4 @@
   <script type="module" src="assets/js/app.js"></script>
 </body>
 </html>
+
