@@ -1,15 +1,16 @@
+// charts.js — wrapper leggero per Chart.js (CDN)
 let cumulativeChartRef = null;
 let funnelChartRef = null;
 
 export function renderCumulativeChart(ctx, labels, target, done){
-  if (cumulativeChartRef) { cumulativeChartRef.destroy(); }
+  if (cumulativeChartRef) cumulativeChartRef.destroy();
   cumulativeChartRef = new Chart(ctx, {
     type: 'line',
     data: {
       labels,
       datasets: [
         { label:'Target atteso', data: target, borderWidth:2, tension:.25 },
-        { label:'Fatto reale', data: done, borderWidth:2, tension:.25 }
+        { label:'Fatto reale',  data: done,   borderWidth:2, tension:.25 }
       ]
     },
     options: {
@@ -22,13 +23,10 @@ export function renderCumulativeChart(ctx, labels, target, done){
 }
 
 export function renderFunnelChart(ctx, labels, values){
-  if (funnelChartRef) { funnelChartRef.destroy(); }
+  if (funnelChartRef) funnelChartRef.destroy();
   funnelChartRef = new Chart(ctx, {
     type: 'bar',
-    data: {
-      labels,
-      datasets: [{ label:'Valore', data: values }]
-    },
+    data: { labels, datasets: [{ label:'Valore', data: values }] },
     options: {
       responsive:true,
       plugins:{ legend:{ display:false } },
@@ -36,3 +34,4 @@ export function renderFunnelChart(ctx, labels, values){
     }
   });
 }
+
