@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="QPQ logo">
+  <defs>
+    <style>
+      .bg { fill: #0ea5e9; }
+      .txt { fill: #ffffff; font: 700 200px 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; }
+      .stroke { fill: none; stroke: #ffffff; stroke-width: 28; opacity: .9; }
+    </style>
+  </defs>
+  <rect x="32" y="32" width="448" height="448" rx="96" class="bg" />
+  <rect x="32" y="32" width="448" height="448" rx="96" class="stroke" />
+  <text x="256" y="300" text-anchor="middle" class="txt">QPQ</text>
+  <rect x="336" y="320" width="28" height="48" fill="#ffffff"/>
+  <rect x="372" y="296" width="28" height="72" fill="#ffffff"/>
+  <rect x="408" y="260" width="28" height="108" fill="#ffffff"/>
+</svg>
