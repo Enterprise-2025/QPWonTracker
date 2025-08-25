@@ -1,4 +1,7 @@
-// models.js — costanti e helper di base
+// models.js — costanti + helper condivisi (QPQ)
+
+export const APP_NAME = "QPWonQuarterTracker";
+export const APP_SHORT = "QPQ";
 
 export const STAGES = [
   "lead", "contatto", "discovery", "proposta", "negoziazione", "vinto", "perso"
@@ -12,23 +15,23 @@ export const DEFAULT_CONFIG = {
   theme: "dark",
   currency: "€",
   stageProbabilities: { ...DEFAULT_STAGE_PROB },
-  stageOrder: [...STAGES],           // ordine colonne kanban + funnel
-  paceCurve: "linear",               // 'linear' | 'ramp (20/30/50)'
+  stageOrder: [...STAGES],            // ordine colonne kanban + funnel
+  paceCurve: "linear",                // 'linear' | 'ramp'
   thresholds: { coverage: { red: 1, amber: 2 }, underPace: 0.1 },
-  holidays: []                       // array di stringhe "YYYY-MM-DD"
+  holidays: []                        // array di stringhe "YYYY-MM-DD"
 };
 
 export function getQuarterDates(year, q){
-  const startMonths = {1:0, 2:3, 3:6, 4:9};   // Jan/Apr/Jul/Oct
+  const startMonths = {1:0, 2:3, 3:6, 4:9};       // Jan/Apr/Jul/Oct
   const start = new Date(Date.UTC(year, startMonths[q], 1));
-  const end   = new Date(Date.UTC(year, startMonths[q] + 3, 0)); // ultimo giorno del terzo mese
+  const end   = new Date(Date.UTC(year, startMonths[q] + 3, 0)); // ultimo giorno del 3° mese
   return { start, end };
 }
 
 export function formatCurrency(n, cur="€"){
   if (n == null || isNaN(n)) return "-";
   try {
-    // uso EUR per formattazione, poi sostituisco simbolo visualizzato
+    // formatto in EUR e poi sostituisco simbolo per evitare problemi con valute custom
     return new Intl.NumberFormat("it-IT", {
       style:"currency", currency:"EUR", maximumFractionDigits:0
     }).format(n).replace("€", cur);
@@ -52,7 +55,7 @@ export function workdaysBetween(start, end, holidays=[]){
   const e = new Date(Date.UTC(end.getUTCFullYear(),   end.getUTCMonth(),   end.getUTCDate()));
   let days = 0;
   for (let d = new Date(s); d <= e; d.setUTCDate(d.getUTCDate()+1)){
-    const wd = d.getUTCDay();               // 0=Sun ... 6=Sat
+    const wd = d.getUTCDay(); // 0=Dom ... 6=Sab
     const iso = fmtDate(d);
     if (wd!==0 && wd!==6 && !hs.has(iso)) days++;
   }
@@ -86,3 +89,4 @@ export function rampPaceFraction(start, end, today, holidays){
 }
 
 export function uid(){ return Math.random().toString(36).slice(2,10); }
+
