@@ -1,8 +1,9 @@
-// charts.js — wrapper leggero per Chart.js (CDN)
+// charts.js — wrapper leggero per Chart.js (QPQ)
 let cumulativeChartRef = null;
 let funnelChartRef = null;
 
 export function renderCumulativeChart(ctx, labels, target, done){
+  if (!ctx) return;
   if (cumulativeChartRef) cumulativeChartRef.destroy();
   cumulativeChartRef = new Chart(ctx, {
     type: 'line',
@@ -23,6 +24,7 @@ export function renderCumulativeChart(ctx, labels, target, done){
 }
 
 export function renderFunnelChart(ctx, labels, values){
+  if (!ctx) return;
   if (funnelChartRef) funnelChartRef.destroy();
   funnelChartRef = new Chart(ctx, {
     type: 'bar',
@@ -34,4 +36,5 @@ export function renderFunnelChart(ctx, labels, values){
     }
   });
 }
+
 
