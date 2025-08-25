@@ -1,10 +1,21 @@
-// kpi.js — KPI + serie per grafici/tabelle
+// kpi.js — KPI + serie per grafici/tabelle (QPQ)
 import { workdaysBetween, rampPaceFraction } from './models.js';
 import { getCurrentQuarter, getDeals, getConfig } from './store.js';
 
 export function computeKPIs(){
   const q = getCurrentQuarter();
   const cfg = getConfig();
+
+  if (!q){
+    const today = new Date();
+    return {
+      target: 0, done: 0, pipeline: 0, forecast: 0,
+      paceExpected: 0, delta: 0, coverage: Infinity, runRate: 0,
+      wdTotal: 0, wdSoFar: 0, health: 0,
+      start: today, end: today
+    };
+  }
+
   const start = new Date(q.startDate + "T00:00:00Z");
   const end   = new Date(q.endDate   + "T00:00:00Z");
   const today = new Date();
@@ -29,10 +40,9 @@ export function computeKPIs(){
   const runRate = remaining / weeks;
   const coverage = remaining > 0 ? (pipeline / remaining) : Infinity;
 
-  // piccolo health score sintetico
-  const paceScore = Math.max(0, Math.min(100, 50 + (delta / (q.target*0.2))*50));
+  const paceScore = Math.max(0, Math.min(100, 50 + (delta / (q.target*0.2 || 1))*50));
   const covScore  = coverage >= 2 ? 100 : coverage <= 1 ? 20 : 60;
-  const fcScore   = Math.max(0, Math.min(100, (forecast / q.target)*100));
+  const fcScore   = Math.max(0, Math.min(100, (q.target? forecast / q.target : 0)*100));
   const health    = Math.round(0.4*paceScore + 0.4*covScore + 0.2*fcScore);
 
   return { target: q.target, done, pipeline, forecast, paceExpected, delta, coverage, runRate, wdTotal, wdSoFar, health, start, end };
@@ -41,6 +51,8 @@ export function computeKPIs(){
 export function weeklySeries(){
   const q = getCurrentQuarter();
   const cfg = getConfig();
+  if (!q) return { labels: [], targetCum: [], doneCum: [], weeks: [] };
+
   const deals = getDeals(q.id);
   const start = new Date(q.startDate + "T00:00:00Z");
   const end   = new Date(q.endDate   + "T00:00:00Z");
@@ -57,7 +69,7 @@ export function weeklySeries(){
   }
   const labels = weeks.map((_,i)=>`W${i+1}`);
 
-  // target cumulativo: lineare o ramp in base a config
+  // target cumulativo
   const targetCum = [];
   for (let i=0;i<weeks.length;i++){
     const endOfWeek = new Date(weeks[i].end);
@@ -89,8 +101,10 @@ export function weeklySeries(){
 export function funnelData(){
   const q = getCurrentQuarter();
   const cfg = getConfig();
-  const deals = getDeals(q.id);
   const order = Array.isArray(cfg.stageOrder) ? cfg.stageOrder : Object.keys(cfg.stageProbabilities);
+  if (!q) return { labels: order, values: order.map(()=>0) };
+
+  const deals = getDeals(q.id);
   const sums = order.map(st => deals.filter(d=>d.stage===st).reduce((s,d)=>s+(+d.value||0), 0));
   return { labels: order, values: sums };
 }
