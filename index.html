@@ -11,7 +11,7 @@
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-512.png">
 
-  <!-- Font & CSS -->
+  <!-- Fonts & Styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,8 +19,8 @@
 </head>
 <body>
   <header class="app-header">
-    <div class="brand" aria-label="Quarter Tracker">
-      <span class="logo" aria-hidden="true">QT</span>
+    <div class="brand">
+      <span class="logo">QT</span>
       <h1>Quarter Tracker</h1>
     </div>
 
@@ -39,30 +39,28 @@
   </header>
 
   <main id="app" role="main">
-    <!-- ===== DASHBOARD ===== -->
-    <section id="view-dashboard" class="view active" aria-labelledby="dash-title">
-      <h2 id="dash-title" class="sr-only">Dashboard</h2>
-
-      <div class="kpi-grid" id="kpiGrid"><!-- KPI cards render here --></div>
+    <!-- DASHBOARD -->
+    <section id="view-dashboard" class="view active">
+      <div class="kpi-grid" id="kpiGrid"></div>
 
       <div class="cards-row">
         <div class="card">
           <div class="card-header">
             <h3>Andamento cumulativo</h3>
-            <span id="cumulativeLegend" class="legend"></span>
+            <span class="legend">Target atteso vs Fatto reale</span>
           </div>
           <div class="card-body">
-            <canvas id="cumulativeChart" height="120" aria-label="Grafico cumulativo" role="img"></canvas>
+            <canvas id="cumulativeChart" height="120"></canvas>
           </div>
         </div>
 
         <div class="card">
           <div class="card-header">
             <h3>Funnel trimestrale</h3>
-            <span id="funnelLegend" class="legend"></span>
+            <span class="legend">Valore per stage</span>
           </div>
           <div class="card-body">
-            <canvas id="funnelChart" height="120" aria-label="Funnel trattative" role="img"></canvas>
+            <canvas id="funnelChart" height="120"></canvas>
           </div>
         </div>
       </div>
@@ -78,34 +76,32 @@
                 <th>#</th>
                 <th>Inizio</th>
                 <th>Fine</th>
-                <th>Fatto</th>
-                <th>Obiettivo sett.</th>
+                <th>Fatto (cum.)</th>
+                <th>Obiettivo (cum.)</th>
                 <th>Scostamento</th>
                 <th>Run-rate richiesto</th>
               </tr>
             </thead>
-            <tbody><!-- rows render here --></tbody>
+            <tbody></tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- ===== TRATTATIVE ===== -->
-    <section id="view-trattative" class="view" aria-labelledby="trattative-title">
-      <h2 id="trattative-title" class="sr-only">Trattative</h2>
-      <div class="kanban" id="kanbanBoard"><!-- Kanban columns render here --></div>
+    <!-- TRATTATIVE -->
+    <section id="view-trattative" class="view">
+      <div class="kanban" id="kanbanBoard"></div>
     </section>
 
-    <!-- ===== REPORT ===== -->
-    <section id="view-report" class="view" aria-labelledby="report-title">
-      <h2 id="report-title" class="sr-only">Report</h2>
+    <!-- REPORT -->
+    <section id="view-report" class="view">
       <div class="card">
         <div class="card-header">
           <h3>Report trimestrale</h3>
           <div class="actions">
             <button id="exportPdfBtn">Esporta PDF</button>
             <button id="exportJsonBtn">Backup JSON</button>
-            <label class="import-label">
+            <label class="import-label" style="display:inline-flex;gap:.5rem;align-items:center;cursor:pointer;">
               Importa JSON
               <input type="file" id="importJsonInput" accept="application/json" hidden>
             </label>
@@ -113,21 +109,17 @@
         </div>
         <div class="card-body" id="reportArea">
           <div class="report-grid">
-            <div id="reportKPIs"><!-- report KPI cards --></div>
-
+            <div id="reportKPIs"></div>
             <div class="report-chart">
-              <canvas id="reportCumulativeChart" height="140" aria-label="Report cumulativo" role="img"></canvas>
+              <canvas id="reportCumulativeChart" height="140"></canvas>
             </div>
-
             <div class="report-chart">
-              <canvas id="reportFunnelChart" height="140" aria-label="Report funnel" role="img"></canvas>
+              <canvas id="reportFunnelChart" height="140"></canvas>
             </div>
-
             <div>
               <h4>Top deal vinti</h4>
               <ul id="topWonList" class="simple-list"></ul>
             </div>
-
             <div>
               <h4>Top pipeline</h4>
               <ul id="topPipelineList" class="simple-list"></ul>
@@ -137,10 +129,8 @@
       </div>
     </section>
 
-    <!-- ===== IMPOSTAZIONI ===== -->
-    <section id="view-settings" class="view" aria-labelledby="settings-title">
-      <h2 id="settings-title" class="sr-only">Impostazioni</h2>
-
+    <!-- IMPOSTAZIONI -->
+    <section id="view-settings" class="view">
       <div class="card">
         <div class="card-header"><h3>Target & date trimestre</h3></div>
         <div class="card-body settings-grid">
@@ -164,18 +154,33 @@
           <label>Fine
             <input type="date" id="setEndDate">
           </label>
-          <label>Ferie (separate da virgola)
+          <label>Ferie (comma-separated)
             <input type="text" id="setHolidays" placeholder="2025-08-15, 2025-12-24">
           </label>
+          <label>Pace
+            <select id="setPaceCurve">
+              <option value="linear">Lineare</option>
+              <option value="ramp">Ramp (20/30/50)</option>
+            </select>
+          </label>
           <button id="saveQuarterBtn" class="primary">Salva trimestre</button>
+          <button id="saveHolidaysBtn">Salva ferie</button>
         </div>
       </div>
 
       <div class="card">
         <div class="card-header"><h3>Stage & probabilità</h3></div>
         <div class="card-body">
-          <div id="stagesConfig"><!-- righe stage/probabilità --></div>
-          <button id="saveStagesBtn">Salva probabilità</button>
+          <div id="stagesConfig"></div>
+          <div class="row-actions">
+            <input type="text" id="addStageName" placeholder="Nuovo stage">
+            <input type="number" id="addStageProb" min="0" max="100" step="5" placeholder="Prob (%)">
+            <button id="addStageBtn">Aggiungi stage</button>
+          </div>
+          <small class="muted">Gli stage <b>vinto</b> e <b>perso</b> sono obbligatori e non eliminabili.</small>
+          <div class="row-actions">
+            <button id="saveStagesBtn">Salva stage & probabilità</button>
+          </div>
         </div>
       </div>
 
@@ -200,11 +205,11 @@
     </section>
   </main>
 
-  <!-- ===== MODALE NUOVO DEAL ===== -->
+  <!-- Modale Deal (create/edit) -->
   <div id="dealModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="deal-modal-title">
     <div class="modal-dialog">
       <div class="modal-header">
-        <h3 id="deal-modal-title">Nuovo deal</h3>
+        <h3 id="deal-modal-title">Deal</h3>
         <button class="icon-btn" id="closeDealModal" aria-label="Chiudi">✕</button>
       </div>
       <div class="modal-body grid-2">
@@ -241,15 +246,15 @@
   </div>
 
   <footer class="app-footer">
-    <span>Quarter Tracker • Offline-first • v1.0</span>
+    <span>Quarter Tracker • Offline-first</span>
   </footer>
 
-  <!-- Vendor (CDN) -->
+  <!-- Vendors -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-  <!-- App (module order matters) -->
+  <!-- App modules -->
   <script type="module" src="assets/js/models.js"></script>
   <script type="module" src="assets/js/store.js"></script>
   <script type="module" src="assets/js/kpi.js"></script>
