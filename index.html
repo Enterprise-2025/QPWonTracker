@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quarter Tracker</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0ea5e9" />
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-512.png">
+
+  <!-- Font & CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand" aria-label="Quarter Tracker">
+      <span class="logo" aria-hidden="true">QT</span>
+      <h1>Quarter Tracker</h1>
+    </div>
+
+    <nav class="app-nav" aria-label="Navigazione principale">
+      <button class="nav-btn" data-view="dashboard" aria-controls="view-dashboard">Dashboard</button>
+      <button class="nav-btn" data-view="trattative" aria-controls="view-trattative">Trattative</button>
+      <button class="nav-btn" data-view="report" aria-controls="view-report">Report</button>
+      <button class="nav-btn" data-view="settings" aria-controls="view-settings">Impostazioni</button>
+    </nav>
+
+    <div class="header-actions">
+      <label for="quarterSelector" class="sr-only">Seleziona trimestre</label>
+      <select id="quarterSelector" title="Seleziona trimestre"></select>
+      <button id="newDealBtn" class="primary">+ Nuovo deal</button>
+    </div>
+  </header>
+
+  <main id="app" role="main">
+    <!-- ===== DASHBOARD ===== -->
+    <section id="view-dashboard" class="view active" aria-labelledby="dash-title">
+      <h2 id="dash-title" class="sr-only">Dashboard</h2>
+
+      <div class="kpi-grid" id="kpiGrid"><!-- KPI cards render here --></div>
+
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-header">
+            <h3>Andamento cumulativo</h3>
+            <span id="cumulativeLegend" class="legend"></span>
+          </div>
+          <div class="card-body">
+            <canvas id="cumulativeChart" height="120" aria-label="Grafico cumulativo" role="img"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Funnel trimestrale</h3>
+            <span id="funnelLegend" class="legend"></span>
+          </div>
+          <div class="card-body">
+            <canvas id="funnelChart" height="120" aria-label="Funnel trattative" role="img"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Settimane del trimestre</h3>
+        </div>
+        <div class="card-body">
+          <table class="table" id="weeksTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Inizio</th>
+                <th>Fine</th>
+                <th>Fatto</th>
+                <th>Obiettivo sett.</th>
+                <th>Scostamento</th>
+                <th>Run-rate richiesto</th>
+              </tr>
+            </thead>
+            <tbody><!-- rows render here --></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TRATTATIVE ===== -->
+    <section id="view-trattative" class="view" aria-labelledby="trattative-title">
+      <h2 id="trattative-title" class="sr-only">Trattative</h2>
+      <div class="kanban" id="kanbanBoard"><!-- Kanban columns render here --></div>
+    </section>
+
+    <!-- ===== REPORT ===== -->
+    <section id="view-report" class="view" aria-labelledby="report-title">
+      <h2 id="report-title" class="sr-only">Report</h2>
+      <div class="card">
+        <div class="card-header">
+          <h3>Report trimestrale</h3>
+          <div class="actions">
+            <button id="exportPdfBtn">Esporta PDF</button>
+            <button id="exportJsonBtn">Backup JSON</button>
+            <label class="import-label">
+              Importa JSON
+              <input type="file" id="importJsonInput" accept="application/json" hidden>
+            </label>
+          </div>
+        </div>
+        <div class="card-body" id="reportArea">
+          <div class="report-grid">
+            <div id="reportKPIs"><!-- report KPI cards --></div>
+
+            <div class="report-chart">
+              <canvas id="reportCumulativeChart" height="140" aria-label="Report cumulativo" role="img"></canvas>
+            </div>
+
+            <div class="report-chart">
+              <canvas id="reportFunnelChart" height="140" aria-label="Report funnel" role="img"></canvas>
+            </div>
+
+            <div>
+              <h4>Top deal vinti</h4>
+              <ul id="topWonList" class="simple-list"></ul>
+            </div>
+
+            <div>
+              <h4>Top pipeline</h4>
+              <ul id="topPipelineList" class="simple-list"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== IMPOSTAZIONI ===== -->
+    <section id="view-settings" class="view" aria-labelledby="settings-title">
+      <h2 id="settings-title" class="sr-only">Impostazioni</h2>
+
+      <div class="card">
+        <div class="card-header"><h3>Target & date trimestre</h3></div>
+        <div class="card-body settings-grid">
+          <label>Anno
+            <input type="number" id="setYear" min="2000" max="2100">
+          </label>
+          <label>Trimestre
+            <select id="setQuarter">
+              <option value="1">Q1 (Gen–Mar)</option>
+              <option value="2">Q2 (Apr–Giu)</option>
+              <option value="3">Q3 (Lug–Set)</option>
+              <option value="4">Q4 (Ott–Dic)</option>
+            </select>
+          </label>
+          <label>Target (€)
+            <input type="number" id="setTarget" min="0" step="100">
+          </label>
+          <label>Inizio
+            <input type="date" id="setStartDate">
+          </label>
+          <label>Fine
+            <input type="date" id="setEndDate">
+          </label>
+          <label>Ferie (separate da virgola)
+            <input type="text" id="setHolidays" placeholder="2025-08-15, 2025-12-24">
+          </label>
+          <button id="saveQuarterBtn" class="primary">Salva trimestre</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Stage & probabilità</h3></div>
+        <div class="card-body">
+          <div id="stagesConfig"><!-- righe stage/probabilità --></div>
+          <button id="saveStagesBtn">Salva probabilità</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Aspetto & dati</h3></div>
+        <div class="card-body settings-grid">
+          <label>Tema
+            <select id="setTheme">
+              <option value="light">Chiaro</option>
+              <option value="dark">Scuro</option>
+            </select>
+          </label>
+          <label>Valuta
+            <input type="text" id="setCurrency" value="€">
+          </label>
+          <div class="row-actions">
+            <button id="seedDemoBtn">Ricarica dati demo</button>
+            <button id="resetAllBtn" class="danger">Reset totale</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== MODALE NUOVO DEAL ===== -->
+  <div id="dealModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="deal-modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="deal-modal-title">Nuovo deal</h3>
+        <button class="icon-btn" id="closeDealModal" aria-label="Chiudi">✕</button>
+      </div>
+      <div class="modal-body grid-2">
+        <label>Nome deal
+          <input type="text" id="dealName" placeholder="Es. CRM Enterprise">
+        </label>
+        <label>Cliente
+          <input type="text" id="dealClient" placeholder="Es. Aemilia Medical">
+        </label>
+        <label>Valore (€)
+          <input type="number" id="dealValue" min="0" step="100">
+        </label>
+        <label>Stage
+          <select id="dealStage"></select>
+        </label>
+        <label>Probabilità (%) <small>(auto dallo stage, modificabile)</small>
+          <input type="number" id="dealProbability" min="0" max="100" step="5">
+        </label>
+        <label>Chiusura prevista
+          <input type="date" id="dealECD">
+        </label>
+        <label>Tag
+          <input type="text" id="dealTags" placeholder="comma, separated">
+        </label>
+        <label>Note
+          <textarea id="dealNotes" rows="3" placeholder="Dettagli, vincoli, prossimi passi..."></textarea>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button id="saveDealBtn" class="primary">Salva</button>
+        <button id="cancelDealBtn">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <span>Quarter Tracker • Offline-first • v1.0</span>
+  </footer>
+
+  <!-- Vendor (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+  <!-- App (module order matters) -->
+  <script type="module" src="assets/js/models.js"></script>
+  <script type="module" src="assets/js/store.js"></script>
+  <script type="module" src="assets/js/kpi.js"></script>
+  <script type="module" src="assets/js/charts.js"></script>
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
