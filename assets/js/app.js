@@ -1,6 +1,11 @@
-// app.js — orchestrazione UI
+// app.js — orchestrazione UI (QPQ)
 import { formatCurrency, fmtDate, getQuarterDates } from './models.js';
-import { getState, getConfig, setConfig, getQuarters, getCurrentQuarter, setCurrentQuarter, createQuarter, getDeals, addDeal, updateDeal, moveDeal, exportJSON, importJSON, reseedDemo, deleteAll, deleteDeal, remapStage, reassignStageTo } from './store.js';
+import {
+  getState, getConfig, setConfig,
+  getQuarters, getCurrentQuarter, setCurrentQuarter, createQuarter,
+  getDeals, addDeal, updateDeal, moveDeal, exportJSON, importJSON,
+  reseedDemo, deleteAll, deleteDeal, remapStage, reassignStageTo
+} from './store.js';
 import { computeKPIs, weeklySeries, funnelData } from './kpi.js';
 import { renderCumulativeChart, renderFunnelChart } from './charts.js';
 
@@ -9,23 +14,38 @@ if ('serviceWorker' in navigator){
   window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(console.warn));
 }
 
-const qs = s => document.querySelector(s);
+const qs  = s => document.querySelector(s);
 const qsa = s => Array.from(document.querySelectorAll(s));
 let editingDealId = null;
 
-// ===== THEME =====
 function setTheme(theme){ if (theme === 'light') document.documentElement.classList.add('light'); else document.documentElement.classList.remove('light'); }
+function go(view){
+  qsa('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view === view));
+  qsa('.view').forEach(v=>v.classList.toggle('active', v.id === 'view-'+view));
+  if (view === 'dashboard') { renderKPIs(); renderCharts(); renderWeeksTable(); }
+  if (view === 'trattative') { renderKanban(); }
+  if (view === 'report') { renderReport(); }
+  if (view === 'settings') { fillSettings(); }
+}
 
 // ===== HEADER =====
 function renderQuarterSelector(){
   const sel = qs('#quarterSelector'); sel.innerHTML = '';
   const quarters = getQuarters().slice().sort((a,b)=> (a.year - b.year) || (a.q - b.q));
   const cur = getCurrentQuarter();
-  for (const q of quarters){
+
+  if (!quarters.length){
     const opt = document.createElement('option');
-    opt.value = q.id; opt.textContent = `${q.year} • Q${q.q}`;
-    if (q.id === cur.id) opt.selected = true;
+    opt.textContent = '— Nessun trimestre —';
+    opt.disabled = true; opt.selected = true;
     sel.appendChild(opt);
+  } else {
+    for (const q of quarters){
+      const opt = document.createElement('option');
+      opt.value = q.id; opt.textContent = `${q.year} • Q${q.q}`;
+      if (cur && q.id === cur.id) opt.selected = true;
+      sel.appendChild(opt);
+    }
   }
   sel.onchange = ()=>{ setCurrentQuarter(sel.value); refreshAll(); };
 }
@@ -40,6 +60,15 @@ function kpiBadge(val, thresholds){
 function renderKPIs(){
   const grid = qs('#kpiGrid');
   const cfg = getConfig();
+  const cur = getCurrentQuarter();
+  if (!cur){
+    grid.innerHTML = `
+      <div class="kpi"><div class="label">Stato</div><div class="value">Nessun trimestre attivo</div></div>
+      <div class="kpi"><div class="label">Azione</div><div class="value"><button class="primary" id="createFirstQuarterBtn">Crea trimestre</button></div></div>
+    `;
+    const btn = qs('#createFirstQuarterBtn'); if (btn) btn.onclick = ()=> go('settings');
+    return;
+  }
   const k = computeKPIs();
   grid.innerHTML = `
     <div class="kpi"><div class="label">Target</div><div class="value">${formatCurrency(k.target, cfg.currency)}</div></div>
@@ -54,14 +83,16 @@ function renderKPIs(){
 // ===== CHARTS =====
 function renderCharts(){
   const wk = weeklySeries();
-  renderCumulativeChart(qs('#cumulativeChart').getContext('2d'), wk.labels, wk.targetCum, wk.doneCum);
+  renderCumulativeChart(qs('#cumulativeChart')?.getContext('2d'), wk.labels, wk.targetCum, wk.doneCum);
   const f = funnelData();
-  renderFunnelChart(qs('#funnelChart').getContext('2d'), f.labels, f.values);
+  renderFunnelChart(qs('#funnelChart')?.getContext('2d'), f.labels, f.values);
 }
 
 // ===== WEEKS TABLE =====
 function renderWeeksTable(){
-  const t = qs('#weeksTable tbody'); t.innerHTML = '';
+  const t = qs('#weeksTable tbody'); if (!t) return; t.innerHTML = '';
+  const cur = getCurrentQuarter();
+  if (!cur) return;
   const k = computeKPIs();
   const wk = weeklySeries();
   for (let i=0;i<wk.labels.length;i++){
@@ -88,10 +119,10 @@ function renderWeeksTable(){
 
 // ===== KANBAN =====
 function renderKanban(){
-  const board = qs('#kanbanBoard');
+  const board = qs('#kanbanBoard'); if (!board) return;
   const state = getState();
   const cur = getCurrentQuarter();
-  const deals = getDeals(cur.id);
+  const deals = cur ? getDeals(cur.id) : [];
   const probs = state.config.stageProbabilities;
   const order = Array.isArray(state.config.stageOrder) ? state.config.stageOrder : Object.keys(probs);
 
@@ -146,8 +177,7 @@ function renderKanban(){
       ev.preventDefault();
       const id = ev.dataTransfer.getData('text/plain');
       const stage = zone.dataset.drop;
-      const cur = getCurrentQuarter();
-      const deals = getDeals(cur.id);
+      if (!cur) return;
       const deal = deals.find(x=>x.id===id);
       if (deal){
         if (stage==='perso'){
@@ -204,6 +234,7 @@ function openEditDealModal(deal){
 function closeDealModal(){ qs('#dealModal').classList.add('hidden'); }
 function saveDealFromModal(){
   const cur = getCurrentQuarter();
+  if (!cur){ alert('Crea prima un trimestre in Impostazioni.'); return; }
   const deal = {
     name: qs('#dealName').value.trim(),
     client: qs('#dealClient').value.trim(),
@@ -220,17 +251,21 @@ function saveDealFromModal(){
   if (editingDealId){ deal.id = editingDealId; updateDeal(deal); } else { addDeal(deal); }
   closeDealModal();
   refreshAll();
-  // vai alla vista Trattative
-  qsa('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelector('[data-view="trattative"]').classList.add('active');
-  qsa('.view').forEach(v=>v.classList.remove('active'));
-  qs('#view-trattative').classList.add('active');
-  renderKanban();
+  go('trattative');
 }
 
 // ===== REPORT =====
 function renderReport(){
   const cfg = getConfig();
+  const cur = getCurrentQuarter();
+  if (!cur){
+    qs('#reportKPIs').innerHTML = `<div class="kpi"><div class="label">Stato</div><div class="value">Nessun trimestre</div></div>`;
+    renderCumulativeChart(qs('#reportCumulativeChart')?.getContext('2d'), [], [], []);
+    renderFunnelChart(qs('#reportFunnelChart')?.getContext('2d'), [], []);
+    qs('#topWonList').innerHTML = ''; qs('#topPipelineList').innerHTML = '';
+    return;
+  }
+
   const k = computeKPIs();
   qs('#reportKPIs').innerHTML = `
     <div class="kpi"><div class="label">Target</div><div class="value">${formatCurrency(k.target, cfg.currency)}</div></div>
@@ -242,11 +277,10 @@ function renderReport(){
   `;
 
   const wk = weeklySeries();
-  renderCumulativeChart(document.getElementById('reportCumulativeChart').getContext('2d'), wk.labels, wk.targetCum, wk.doneCum);
+  renderCumulativeChart(qs('#reportCumulativeChart')?.getContext('2d'), wk.labels, wk.targetCum, wk.doneCum);
   const f = funnelData();
-  renderFunnelChart(document.getElementById('reportFunnelChart').getContext('2d'), f.labels, f.values);
+  renderFunnelChart(qs('#reportFunnelChart')?.getContext('2d'), f.labels, f.values);
 
-  const cur = getCurrentQuarter();
   const deals = getDeals(cur.id);
   const won  = deals.filter(d=>d.stage==='vinto').sort((a,b)=>b.value-a.value).slice(0,6);
   const pipe = deals.filter(d=>d.stage!=='vinto' && d.stage!=='perso').sort((a,b)=>b.value-a.value).slice(0,6);
@@ -265,7 +299,7 @@ async function exportReportPDF(){
   const imgWidth = pageWidth - 40;
   const imgHeight = imgWidth * ratio;
   pdf.addImage(img, 'PNG', 20, 20, imgWidth, imgHeight);
-  pdf.save('quarter-report.pdf');
+  pdf.save('qpq-quarter-report.pdf');
 }
 
 // ===== SETTINGS =====
@@ -274,11 +308,11 @@ function fillSettings(){
   const cur = getCurrentQuarter();
   qs('#setTheme').value = cfg.theme;
   qs('#setCurrency').value = cfg.currency;
-  qs('#setYear').value = cur.year;
-  qs('#setQuarter').value = String(cur.q);
-  qs('#setTarget').value = cur.target;
-  qs('#setStartDate').value = cur.startDate;
-  qs('#setEndDate').value = cur.endDate;
+  qs('#setYear').value = cur?.year ?? new Date().getFullYear();
+  qs('#setQuarter').value = String(cur?.q ?? Math.floor(new Date().getMonth()/3)+1);
+  qs('#setTarget').value = cur?.target ?? 0;
+  qs('#setStartDate').value = cur?.startDate ?? '';
+  qs('#setEndDate').value = cur?.endDate ?? '';
   qs('#setHolidays').value = (cfg.holidays||[]).join(', ');
   qs('#setPaceCurve').value = cfg.paceCurve || 'linear';
 
@@ -308,7 +342,6 @@ function renderStagesConfig(){
       </div>`;
     wrap.appendChild(row);
 
-    // wire
     const up = row.querySelector('[data-move="up"]');
     const down = row.querySelector('[data-move="down"]');
     const del = row.querySelector('[data-del]');
@@ -372,7 +405,6 @@ function onAddStage(){
   if (probs[name] != null){ alert('Stage già esistente'); return; }
   probs[name] = prob;
   const order = Array.isArray(cfg.stageOrder) ? [...cfg.stageOrder] : Object.keys(probs);
-  // inserisci prima di vinto/perso
   const endLocked = order.filter(s=> s==='vinto' || s==='perso');
   const movable   = order.filter(s=> s!=='vinto' && s!=='perso');
   movable.push(name);
@@ -380,57 +412,6 @@ function onAddStage(){
   setConfig({ stageProbabilities: probs, stageOrder: newOrder });
   qs('#addStageName').value=''; qs('#addStageProb').value='';
   renderStagesConfig(); refreshAll();
-}
-
-// ===== NAV & BINDINGS =====
-function bindEvents(){
-  // Nav
-  qsa('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      qsa('.nav-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      const view = btn.dataset.view;
-      qsa('.view').forEach(v=>v.classList.remove('active'));
-      qs('#view-'+view).classList.add('active');
-      if (view === 'dashboard') { renderKPIs(); renderCharts(); renderWeeksTable(); }
-      if (view === 'trattative') { renderKanban(); }
-      if (view === 'report') { renderReport(); }
-      if (view === 'settings') { fillSettings(); }
-    });
-  });
-  qsa('.nav-btn')[0].classList.add('active');
-
-  // Deal modal
-  qs('#newDealBtn').onclick = openDealModal;
-  qs('#closeDealModal').onclick = ()=> qs('#dealModal').classList.add('hidden');
-  qs('#cancelDealBtn').onclick = ()=> qs('#dealModal').classList.add('hidden');
-  qs('#saveDealBtn').onclick = saveDealFromModal;
-
-  // Settings
-  qs('#saveQuarterBtn').onclick = onSaveQuarter;
-  qs('#saveStagesBtn').onclick  = onSaveStages;
-  qs('#addStageBtn').onclick    = onAddStage;
-  qs('#setTheme').onchange      = (e)=>{ setConfig({ theme: e.target.value }); setTheme(e.target.value); };
-  qs('#setCurrency').onchange   = (e)=>{ setConfig({ currency: e.target.value }); refreshAll(); };
-  qs('#seedDemoBtn').onclick    = ()=>{ reseedDemo(); init(); };
-  qs('#resetAllBtn').onclick    = ()=>{ if(confirm('Sicuro?')){ deleteAll(); init(); } };
-  qs('#saveHolidaysBtn').onclick= ()=>{
-    const raw = qs('#setHolidays').value.trim();
-    const arr = raw ? raw.split(',').map(s=>s.trim()).filter(Boolean) : [];
-    setConfig({ holidays: arr }); refreshAll(); alert('Ferie salvate');
-  };
-  qs('#setPaceCurve').onchange  = (e)=>{ setConfig({ paceCurve: e.target.value }); refreshAll(); };
-
-  // Export / Import / PDF
-  qs('#exportJsonBtn').onclick = ()=>{
-    const blob = new Blob([exportJSON()], {type:'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'qt-backup.json'; a.click();
-  };
-  qs('#importJsonInput').onchange = async (e)=>{
-    const file = e.target.files[0]; if (!file) return;
-    try{ importJSON(await file.text()); alert('Import OK'); init(); } catch(err){ alert('Errore import: '+err.message); }
-  };
-  qs('#exportPdfBtn').onclick = exportReportPDF;
 }
 
 function onSaveQuarter(){
@@ -450,6 +431,51 @@ function onSaveQuarter(){
   alert('Trimestre salvato');
 }
 
+// ===== NAV & BINDINGS =====
+function bindEvents(){
+  qsa('.nav-btn').forEach(btn => btn.addEventListener('click', () => go(btn.dataset.view)));
+  qsa('.nav-btn')[0]?.classList.add('active');
+
+  // Deal modal
+  qs('#newDealBtn').onclick = openDealModal;
+  qs('#closeDealModal').onclick = ()=> qs('#dealModal').classList.add('hidden');
+  qs('#cancelDealBtn').onclick = ()=> qs('#dealModal').classList.add('hidden');
+  qs('#saveDealBtn').onclick = saveDealFromModal;
+
+  // Settings
+  qs('#saveQuarterBtn').onclick = onSaveQuarter;
+  qs('#saveStagesBtn').onclick  = onSaveStages;
+  qs('#addStageBtn').onclick    = onAddStage;
+  qs('#setTheme').onchange      = (e)=>{ setConfig({ theme: e.target.value }); setTheme(e.target.value); };
+  qs('#setCurrency').onchange   = (e)=>{ setConfig({ currency: e.target.value }); refreshAll(); };
+  qs('#seedDemoBtn').onclick    = ()=>{ reseedDemo(); init(); };
+  qs('#resetAllBtn').onclick    = ()=>{ 
+    if(confirm('Sicuro di azzerare TUTTO?')){ 
+      deleteAll(); 
+      alert('Dati azzerati. Crea ora il tuo primo trimestre.');
+      init(); 
+      go('settings');
+    } 
+  };
+  qs('#saveHolidaysBtn').onclick= ()=>{
+    const raw = qs('#setHolidays').value.trim();
+    const arr = raw ? raw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    setConfig({ holidays: arr }); refreshAll(); alert('Ferie salvate');
+  };
+  qs('#setPaceCurve').onchange  = (e)=>{ setConfig({ paceCurve: e.target.value }); refreshAll(); };
+
+  // Export / Import / PDF
+  qs('#exportJsonBtn').onclick = ()=>{
+    const blob = new Blob([exportJSON()], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'qpq-backup.json'; a.click();
+  };
+  qs('#importJsonInput').onchange = async (e)=>{
+    const file = e.target.files[0]; if (!file) return;
+    try{ importJSON(await file.text()); alert('Import OK'); init(); } catch(err){ alert('Errore import: '+err.message); }
+  };
+  qs('#exportPdfBtn').onclick = exportReportPDF;
+}
+
 // ===== INIT =====
 function refreshAll(){
   const cfg = getConfig();
@@ -461,11 +487,10 @@ function refreshAll(){
   renderKanban();
 }
 function init(){
-  getState(); // load or seed
+  getState();      // load or create empty
   renderQuarterSelector();
   bindEvents();
   refreshAll();
   fillSettings();
 }
 init();
-
